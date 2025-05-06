@@ -1,116 +1,61 @@
-import React, {
-  useState, useCallback, useEffect,
-} from 'react';
-import { Paper } from '@mui/material';
-import { makeStyles } from '@mui/styles';
-import { useTheme } from '@mui/material/styles';
-import useMediaQuery from '@mui/material/useMediaQuery';
-import { useDispatch, useSelector } from 'react-redux';
-import DeviceList from './DeviceList';
-import BottomMenu from '../common/components/BottomMenu';
-import StatusCard from '../common/components/StatusCard';
-import { devicesActions } from '../store';
-import usePersistedState from '../common/util/usePersistedState';
-import EventsDrawer from './EventsDrawer';
-import useFilter from './useFilter';
-import MainToolbar from './MainToolbar';
-import MainMap from './MainMap';
-import { useAttributePreference } from '../common/util/preferences';
-
-const useStyles = makeStyles((theme) => ({
-  root: {
-    height: '100%',
-  },
-  sidebar: {
-    pointerEvents: 'none',
-    display: 'flex',
-    flexDirection: 'column',
-    [theme.breakpoints.up('md')]: {
-      position: 'fixed',
-      left: 0,
-      top: 0,
-      height: `calc(100% - ${theme.spacing(3)})`,
-      width: theme.dimensions.drawerWidthDesktop,
-      margin: theme.spacing(1.5),
-      zIndex: 3,
-    },
-    [theme.breakpoints.down('md')]: {
-      height: '100%',
-      width: '100%',
-    },
-  },
-  header: {
-    pointerEvents: 'auto',
-    zIndex: 6,
-  },
-  footer: {
-    pointerEvents: 'auto',
-    zIndex: 5,
-  },
-  middle: {
-    flex: 1,
-    display: 'grid',
-  },
-  contentMap: {
-    pointerEvents: 'auto',
-    gridArea: '1 / 1',
-  },
-  contentList: {
-    pointerEvents: 'auto',
-    gridArea: '1 / 1',
-    zIndex: 4,
-  },
-}));
+import { Card, useMediaQuery } from "@mui/material";
+import React, { useCallback, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useTheme } from "@mui/material/styles";
+import Topbar from "./Topbar";
+import SideBar from "./SideBar";
+import BottomBar from "./BottomBar";
+import MainMap from "./MainMap";
+import useFilter from "./useFilter";
+import usePersistedState from "../common/util/usePersistedState";
+import StatusCard from "../common/components/StatusCard";
+import StatusDesktopCard from "../common/components/StatusDesktopCard";
+import { devicesActions } from "../store";
 
 const MainPage = () => {
-  const classes = useStyles();
-  const dispatch = useDispatch();
   const theme = useTheme();
-
-  const desktop = useMediaQuery(theme.breakpoints.up('md'));
-
-  const mapOnSelect = useAttributePreference('mapOnSelect', true);
-
-  const selectedDeviceId = useSelector((state) => state.devices.selectedId);
-  const positions = useSelector((state) => state.session.positions);
+  const desktop = useMediaQuery(theme.breakpoints.up("md"));
+  const dispatch = useDispatch();
+  const [keyword, setKeyword] = useState("");
   const [filteredPositions, setFilteredPositions] = useState([]);
-  const selectedPosition = filteredPositions.find((position) => selectedDeviceId && position.deviceId === selectedDeviceId);
-
+  const positions = useSelector((state) => state.session.positions);
+  const selectedDeviceId = useSelector((state) => state.devices.selectedId);
   const [filteredDevices, setFilteredDevices] = useState([]);
-
-  const [keyword, setKeyword] = useState('');
-  const [filter, setFilter] = usePersistedState('filter', {
+  const [ModalActivo, setModalActivo] = useState(false);
+  const [filter, setFilter] = usePersistedState("filter", {
     statuses: [],
     groups: [],
   });
-  const [filterSort, setFilterSort] = usePersistedState('filterSort', '');
-  const [filterMap, setFilterMap] = usePersistedState('filterMap', false);
-
-  const [devicesOpen, setDevicesOpen] = useState(desktop);
+  const [filterSort, setFilterSort] = usePersistedState("filterSort", "");
+  const [filterMap, setFilterMap] = usePersistedState("filterMap", false);
+  const selectedPosition = filteredPositions.find(
+    (position) => selectedDeviceId && position.deviceId === selectedDeviceId
+  );
+  const [opcionApagarMotorActiva, setOpcionApagarMotorActiva] = useState(false);
   const [eventsOpen, setEventsOpen] = useState(false);
-
+  const [devicesOpen, setDevicesOpen] = useState(desktop);
+  const [ocultar, setOcultar] = useState(false);
   const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
+  const anchoSidebar = ocultar ? "56px" : "386px";
+  useFilter(
+    keyword,
+    filter,
+    filterSort,
+    filterMap,
+    positions,
+    setFilteredDevices,
+    setFilteredPositions
+  );
 
-  useEffect(() => {
-    if (!desktop && mapOnSelect && selectedDeviceId) {
-      setDevicesOpen(false);
-    }
-  }, [desktop, mapOnSelect, selectedDeviceId]);
-
-  useFilter(keyword, filter, filterSort, filterMap, positions, setFilteredDevices, setFilteredPositions);
-
-  return (
-    <div className={classes.root}>
-      {desktop && (
-        <MainMap
-          filteredPositions={filteredPositions}
-          selectedPosition={selectedPosition}
-          onEventsClick={onEventsClick}
-        />
-      )}
-      <div className={classes.sidebar}>
-        <Paper square elevation={3} className={classes.header}>
-          <MainToolbar
+  if (desktop) {
+    return (
+      <div
+        className="h-screen flex flex-col w-screen"
+        style={{ minHeight: "520px" }}
+      >
+        <Topbar />
+        <div className="flex w-screen" style={{ minHeight: "470px" }}>
+          <SideBar
             filteredDevices={filteredDevices}
             devicesOpen={devicesOpen}
             setDevicesOpen={setDevicesOpen}
@@ -122,39 +67,51 @@ const MainPage = () => {
             setFilterSort={setFilterSort}
             filterMap={filterMap}
             setFilterMap={setFilterMap}
+            setModalActivo={setModalActivo}
+            setOpcionApagarMotorActiva={setOpcionApagarMotorActiva}
+            setOcultar={setOcultar}
+            ocultar={ocultar}
+            anchoSidebar={anchoSidebar}
           />
-        </Paper>
-        <div className={classes.middle}>
-          {!desktop && (
-            <div className={classes.contentMap}>
+          <div
+            className="flex flex-col flex-1"
+            style={{
+              width: `calc(100vw - ${anchoSidebar})`,
+            }}
+          >
+            <Card
+              style={{
+                height: selectedDeviceId ? "75%" : "100%",
+                minHeight: selectedDeviceId ? "calc(75% - 200px)" : "100%",
+              }}
+            >
               <MainMap
                 filteredPositions={filteredPositions}
                 selectedPosition={selectedPosition}
                 onEventsClick={onEventsClick}
               />
-            </div>
-          )}
-          <Paper square className={classes.contentList} style={devicesOpen ? {} : { visibility: 'hidden' }}>
-            <DeviceList devices={filteredDevices} />
-          </Paper>
-        </div>
-        {desktop && (
-          <div className={classes.footer}>
-            <BottomMenu />
+            </Card>
+            {selectedDeviceId && (
+              <BottomBar
+                deviceId={selectedDeviceId}
+                position={selectedPosition}
+              />
+            )}
           </div>
+        </div>
+        {selectedDeviceId && (
+          <StatusDesktopCard
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            onClose={() => dispatch(devicesActions.selectId(null))}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+          />
         )}
       </div>
-      <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
-      {selectedDeviceId && (
-        <StatusCard
-          deviceId={selectedDeviceId}
-          position={selectedPosition}
-          onClose={() => dispatch(devicesActions.selectId(null))}
-          desktopPadding={theme.dimensions.drawerWidthDesktop}
-        />
-      )}
-    </div>
-  );
+    );
+  } else {
+    return <div>MobilePage</div>;
+  }
 };
 
 export default MainPage;
