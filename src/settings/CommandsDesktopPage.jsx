@@ -16,6 +16,7 @@ import TableShimmer from "../common/components/TableShimmer";
 import SearchHeader, { filterByKeyword } from "./components/SearchHeader";
 import { useRestriction } from "../common/util/permissions";
 import useSettingsStyles from "./common/useSettingsStyles";
+import CollectionDesktopFab from "./components/CollectionDesktopFab";
 
 const CommandsDesktopPage = () => {
   const classes = useSettingsStyles();
@@ -77,7 +78,10 @@ const CommandsDesktopPage = () => {
           )}
         </TableBody>
       </Table>
-      <CollectionFab editPath="/settings/command" disabled={limitCommands} />
+      <CollectionDesktopFab
+        editPath="/settings/command"
+        disabled={limitCommands}
+      />
     </div>
   );
 };

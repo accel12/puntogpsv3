@@ -1,5 +1,5 @@
 import { Card, useMediaQuery } from "@mui/material";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "@mui/material/styles";
 import Topbar from "./Topbar";
@@ -11,12 +11,18 @@ import usePersistedState from "../common/util/usePersistedState";
 import StatusCard from "../common/components/StatusCard";
 import StatusDesktopCard from "../common/components/StatusDesktopCard";
 import { devicesActions } from "../store";
+import StatusDesktopCardModal from "../common/components/StatusDesktopCardModal";
+import StatusDesktopCardModalConfiguraciones from "../common/components/StatusDesktopCardModalConfiguraciones";
+import StatusDesktopCardModalApagarMotor from "../common/components/StatusDesktopCardModalApagarMotor";
 
 const MainPage = () => {
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up("md"));
   const dispatch = useDispatch();
   const [keyword, setKeyword] = useState("");
+  const [valorOpcion, setValorOpcion] = useState(0);
+  const [seleccion, setSeleccion] = useState(0);
+  const [opcionActiva, setOpcionActiva] = useState(false);
   const [filteredPositions, setFilteredPositions] = useState([]);
   const positions = useSelector((state) => state.session.positions);
   const selectedDeviceId = useSelector((state) => state.devices.selectedId);
@@ -46,6 +52,12 @@ const MainPage = () => {
     setFilteredDevices,
     setFilteredPositions
   );
+  useEffect(() => {
+    if (selectedDeviceId && seleccion !== 1) {
+      setSeleccion(1);
+    }
+    setOcultar(false);
+  }, [selectedDeviceId]);
 
   if (desktop) {
     return (
@@ -72,6 +84,8 @@ const MainPage = () => {
             setOcultar={setOcultar}
             ocultar={ocultar}
             anchoSidebar={anchoSidebar}
+            setSeleccion={setSeleccion}
+            seleccion={seleccion}
           />
           <div
             className="flex flex-col flex-1"
@@ -104,6 +118,37 @@ const MainPage = () => {
             deviceId={selectedDeviceId}
             position={selectedPosition}
             onClose={() => dispatch(devicesActions.selectId(null))}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+            setOpcionActiva={setOpcionActiva}
+            setValorOpcion={setValorOpcion}
+          />
+        )}
+        {selectedDeviceId && ModalActivo && (
+          <StatusDesktopCardModal
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            ModalActivo={ModalActivo}
+            setModalActivo={setModalActivo}
+            onClose={() => setModalActivo(false)}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+          />
+        )}
+
+        {selectedDeviceId && opcionActiva && (
+          <StatusDesktopCardModalConfiguraciones
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            valorOpcion={valorOpcion}
+            onClose={() => setOpcionActiva(false)}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+          />
+        )}
+        {selectedDeviceId && opcionApagarMotorActiva && (
+          <StatusDesktopCardModalApagarMotor
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            valorOpcion={valorOpcion}
+            onClose={() => setOpcionApagarMotorActiva(false)}
             desktopPadding={theme.dimensions.drawerWidthDesktop}
           />
         )}

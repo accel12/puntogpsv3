@@ -24,8 +24,8 @@ const useStyles = makeStyles((theme) => ({
   form: {
     maxWidth: theme.spacing(52),
     padding: theme.spacing(5),
-    width: "90%",
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    width: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.7)",
     borderRadius: 10,
   },
   sidebar: {
@@ -37,7 +37,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const LoginLayout = ({ children }) => {
+const LoginDesktopLayout = ({ children }) => {
   const classes = useStyles();
   const theme = useTheme();
 
@@ -63,4 +63,4 @@ const LoginLayout = ({ children }) => {
   );
 };
 
-export default LoginLayout;
+export default LoginDesktopLayout;

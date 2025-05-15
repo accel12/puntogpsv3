@@ -5,7 +5,7 @@ import { FixedSizeList } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 import { devicesActions } from "../store";
 import { useEffectAsync } from "../reactHelper";
-import DeviceRow from "./DeviceRow";
+import DeviceDesktopRow from "./DeviceDesktopRow";
 
 const useStyles = makeStyles((theme) => ({
   list: {
@@ -17,7 +17,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const DeviceDesktopList = ({ devices }) => {
+const DeviceDesktopList = ({
+  devices,
+  setModalActivo,
+  setOpcionApagarMotorActiva,
+}) => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const listInnerEl = useRef(null);
@@ -51,12 +55,12 @@ const DeviceDesktopList = ({ devices }) => {
           width={width}
           height={height}
           itemCount={devices.length}
-          itemData={devices}
+          itemData={{ devices, setModalActivo, setOpcionApagarMotorActiva }}
           itemSize={72}
           overscanCount={10}
           innerRef={listInnerEl}
         >
-          {DeviceRow}
+          {DeviceDesktopRow}
         </FixedSizeList>
       )}
     </AutoSizer>

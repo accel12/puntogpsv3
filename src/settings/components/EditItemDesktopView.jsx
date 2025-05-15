@@ -14,6 +14,7 @@ import { useCatch, useEffectAsync } from "../../reactHelper";
 import { useTranslation } from "../../common/components/LocalizationProvider";
 import PageLayout from "../../common/components/PageLayout";
 import useSettingsStyles from "../common/useSettingsStyles";
+import { useSelector } from "react-redux";
 
 const EditItemDesktopView = ({
   children,
@@ -28,7 +29,7 @@ const EditItemDesktopView = ({
   const classes = useSettingsStyles();
   const t = useTranslation();
 
-  const { id } = useParams();
+  const id = useSelector((state) => state.session.user.id);
 
   useEffectAsync(async () => {
     if (!item) {
@@ -61,7 +62,6 @@ const EditItemDesktopView = ({
       if (onItemSaved) {
         onItemSaved(await response.json());
       }
-      navigate(-1);
     } else {
       throw Error(await response.text());
     }
@@ -88,15 +88,6 @@ const EditItemDesktopView = ({
         </Accordion>
       )}
       <div className={classes.buttons}>
-        <Button
-          type="button"
-          color="primary"
-          variant="outlined"
-          onClick={() => navigate(-1)}
-          disabled={!item}
-        >
-          {t("sharedCancel")}
-        </Button>
         <Button
           type="button"
           color="primary"

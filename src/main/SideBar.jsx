@@ -9,13 +9,16 @@ import NotificationsActiveIcon from "@mui/icons-material/NotificationsActive";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import KeyboardDoubleArrowLeftIcon from "@mui/icons-material/KeyboardDoubleArrowLeft";
 import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import UserDesktopPage from "../settings/UserDesktopPage";
 import VehiculosCustom from "./VehiculosCustom";
 import SettingsMenu from "../settings/components/SettingsMenu";
 import ReportsMenu from "../reports/components/ReportsMenu";
 import CommandsDesktopPage from "../settings/CommandsDesktopPage";
 import NotificationsDesktopPage from "../settings/NotificationsDesktopPage";
+import { nativePostMessage } from "../common/components/NativeInterface";
+import { useNavigate } from "react-router-dom";
+import { sessionActions } from "../store";
 
 const SideBar = ({
   filteredDevices,
@@ -34,9 +37,12 @@ const SideBar = ({
   ocultar,
   setOcultar,
   anchoSidebar,
+  seleccion,
+  setSeleccion,
 }) => {
   const devices = useSelector((state) => state.devices.items);
-  const [seleccion, setSeleccion] = useState(0);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [estados, setEstados] = useState({ total: 0, online: 0, offline: 0 });
 
   const handleLogout = async () => {
@@ -164,123 +170,131 @@ const SideBar = ({
         >
           <div className=" flex-1 flex justify-center my-4">
             <div className="flex gap-2 flex-col text-[#E1E3E9]">
-              <div
-                style={
-                  seleccion == 0
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : { cursor: "pointer" }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(0);
-                }}
-              >
-                <PersonIcon fontSize="large" sx={{ margin: "2px" }} />
-              </div>
-              <div
-                style={
-                  seleccion == 1
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : { cursor: "pointer" }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(1);
-                }}
-              >
-                <DirectionsCarIcon fontSize="large" sx={{ margin: "2px" }} />
-              </div>
-
-              <div
-                style={
-                  seleccion == 2
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : { cursor: "pointer" }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(2);
-                }}
-              >
-                <HandymanIcon fontSize="large" sx={{ margin: "2px" }} />
-              </div>
-
-              <div
-                style={
-                  seleccion == 3
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : { cursor: "pointer" }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(3);
-                }}
-              >
-                <BarChartIcon fontSize="large" sx={{ margin: "2px" }} />
-              </div>
-
-              <div
-                style={
-                  seleccion == 4
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : {
-                        cursor: "pointer",
-                      }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(4);
-                }}
-              >
-                <CloudSyncIcon fontSize="large" sx={{ margin: "2px" }} />
-              </div>
-
-              <div
-                style={
-                  seleccion == 5
-                    ? {
-                        border: "2px solid #638FCD",
-                        backgroundColor: "#E1E3E9",
-                        color: "#004AAD",
-                        cursor: "pointer",
-                      }
-                    : { cursor: "pointer" }
-                }
-                className="rounded-full"
-                onClick={() => {
-                  setSeleccion(5);
-                }}
-              >
-                <NotificationsActiveIcon
-                  fontSize="large"
-                  sx={{ margin: "2px" }}
-                />
-              </div>
+              <Tooltip title="Usuarios" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 0
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : { cursor: "pointer" }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(0);
+                  }}
+                >
+                  <PersonIcon fontSize="large" sx={{ margin: "2px" }} />
+                </div>
+              </Tooltip>
+              <Tooltip title="Vehículos" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 1
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : { cursor: "pointer" }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(1);
+                  }}
+                >
+                  <DirectionsCarIcon fontSize="large" sx={{ margin: "2px" }} />
+                </div>
+              </Tooltip>
+              <Tooltip title="Ajustes" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 2
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : { cursor: "pointer" }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(2);
+                  }}
+                >
+                  <HandymanIcon fontSize="large" sx={{ margin: "2px" }} />
+                </div>
+              </Tooltip>
+              <Tooltip title="Reportes" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 3
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : { cursor: "pointer" }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(3);
+                  }}
+                >
+                  <BarChartIcon fontSize="large" sx={{ margin: "2px" }} />
+                </div>
+              </Tooltip>
+              <Tooltip title="Comandos" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 4
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : {
+                          cursor: "pointer",
+                        }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(4);
+                  }}
+                >
+                  <CloudSyncIcon fontSize="large" sx={{ margin: "2px" }} />
+                </div>
+              </Tooltip>
+              <Tooltip title="Notificaciones" arrow placement="right-start">
+                <div
+                  style={
+                    seleccion == 5
+                      ? {
+                          border: "2px solid #638FCD",
+                          backgroundColor: "#E1E3E9",
+                          color: "#004AAD",
+                          cursor: "pointer",
+                        }
+                      : { cursor: "pointer" }
+                  }
+                  className="rounded-full"
+                  onClick={() => {
+                    setSeleccion(5);
+                  }}
+                >
+                  <NotificationsActiveIcon
+                    fontSize="large"
+                    sx={{ margin: "2px" }}
+                  />
+                </div>
+              </Tooltip>
             </div>
           </div>
           <div
@@ -405,6 +419,7 @@ const SideBar = ({
             backgroundColor: "#F8F7FC",
             width: ocultar ? 0 : "330px",
             transition: "width 0.2s ease-in-out",
+            position: "relative",
           }}
         >
           {renderizarPanel()}

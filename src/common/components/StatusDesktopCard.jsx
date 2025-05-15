@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import Draggable from "react-draggable";
@@ -14,9 +14,6 @@ import {
   TableCell,
   Menu,
   MenuItem,
-  CardMedia,
-  TableFooter,
-  Link,
   Tooltip,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
@@ -26,6 +23,12 @@ import PublishIcon from "@mui/icons-material/Publish";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PendingIcon from "@mui/icons-material/Pending";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import FeedIcon from "@mui/icons-material/Feed";
+import RouteIcon from "@mui/icons-material/Route";
+import LockIcon from "@mui/icons-material/Lock";
+import AnchorIcon from "@mui/icons-material/Anchor";
+import KeyIcon from "@mui/icons-material/Key";
 
 import { useTranslation } from "./LocalizationProvider";
 import RemoveDialog from "./RemoveDialog";
@@ -35,6 +38,9 @@ import usePositionAttributes from "../attributes/usePositionAttributes";
 import { devicesActions } from "../../store";
 import { useCatch, useCatchCallback } from "../../reactHelper";
 import { useAttributePreference } from "../util/preferences";
+import dayjs from "dayjs";
+import { formatStatus, getStatusColor } from "../util/formatter";
+import { convertToEmbedUrl } from "../util/streetview";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -56,6 +62,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     alignItems: "center",
     padding: theme.spacing(1, 1, 0, 2),
+    backgroundColor: "#DAD9DD",
   },
   content: {
     paddingTop: theme.spacing(1),
@@ -92,7 +99,46 @@ const useStyles = makeStyles((theme) => ({
     transform: "translate(-50%, 60%)",
   }),
 }));
+const useStyles2 = makeStyles((theme) => ({
+  icon: {
+    width: "40px",
+    height: "40px",
+    // filter: "brightness(0) invert(1)",
+  },
+  batteryText: {
+    fontSize: "0.75rem",
+    fontWeight: "normal",
+    lineHeight: "0.875rem",
+  },
+  success: {
+    color: theme.palette.success.main,
+  },
+  warning: {
+    color: theme.palette.warning.main,
+  },
+  error: {
+    color: theme.palette.error.main,
+  },
+  neutral: {
+    color: theme.palette.neutral.main,
+  },
+}));
+const obtenerDireccion = async (lat, lng) => {
+  const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`;
 
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error("Error al obtener la dirección");
+    }
+    const data = await response.json();
+    const direccion = data.display_name;
+    return direccion;
+  } catch (error) {
+    console.error("Error:", error);
+    return null;
+  }
+};
 const StatusRow = ({ name, content }) => {
   const classes = useStyles();
 
@@ -110,17 +156,70 @@ const StatusRow = ({ name, content }) => {
   );
 };
 
+const obtenerInfoParada = async (id) => {
+  const startDate = dayjs().startOf("day").toISOString();
+  const endDate = dayjs().endOf("day").toISOString();
+
+  const armarQuery = `deviceId=${id}&from=${startDate}&to=${endDate}`;
+  const response = await fetch(`/api/reports/stops?${armarQuery}`, {
+    headers: { Accept: "application/json" },
+  });
+  console.log(armarQuery);
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw Error(await response.text());
+    return [];
+  }
+};
+
 const StatusDesktopCard = ({
   deviceId,
   position,
   onClose,
-  disableActions,
+  setOpcionActiva,
+  setValorOpcion,
   desktopPadding = 0,
 }) => {
   const classes = useStyles({ desktopPadding });
+  const classes2 = useStyles2();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const [direccion, setDireccion] = useState("");
+  const [vistaMapa, setVistaMapa] = useState(false);
+  const [data, setData] = useState(null);
   const t = useTranslation();
+  const obtenerData = async () => {
+    const getDataParada = await obtenerInfoParada(deviceId);
+    const getDataEncendido = await obtenerInfoEncendido(deviceId);
+    const getInfoParada =
+      getDataParada.length == 0
+        ? "Niguno"
+        : formatNumericHours(
+            getDataParada[getDataParada.length - 1].duration,
+            t
+          );
+    const getInfoEncendido =
+      getDataEncendido.length == 0
+        ? "Niguno"
+        : formatNumericHours(
+            getDataEncendido[getDataEncendido.length - 1].duration,
+            t
+          );
+    setData({
+      parada: getInfoParada,
+      encendido: getInfoEncendido,
+    });
+  };
+
+  useEffect(() => {
+    if (position !== undefined) {
+      obtenerData();
+      obtenerDireccion(position.latitude, position.longitude).then((x) => {
+        setDireccion(x);
+      });
+    }
+  }, [position]);
 
   const deviceReadonly = useDeviceReadonly();
 
@@ -131,6 +230,26 @@ const StatusDesktopCard = ({
   const device = useSelector((state) => state.devices.items[deviceId]);
 
   const deviceImage = device?.attributes?.deviceImage;
+  const secondaryText = (item) => {
+    let status;
+    if (item.status === "online" || !item.lastUpdate) {
+      status = formatStatus(item.status, t);
+    } else {
+      status = dayjs(item.lastUpdate).fromNow();
+    }
+    console.log(item.status);
+    return (
+      <>
+        {item.status === "unknown" ? (
+          <span className={classes2}>{status}</span>
+        ) : (
+          <span className={classes2[getStatusColor(item.status)]}>
+            {status}
+          </span>
+        )}
+      </>
+    );
+  };
 
   const positionAttributes = usePositionAttributes(t);
   const positionItems = useAttributePreference(
@@ -192,27 +311,56 @@ const StatusDesktopCard = ({
         {device && (
           <Draggable handle={`.${classes.media}, .${classes.header}`}>
             <Card elevation={3} className={classes.card}>
-              {deviceImage ? (
-                <CardMedia
-                  className={classes.media}
-                  image={`/api/media/${device.uniqueId}/${deviceImage}`}
-                >
-                  <IconButton
-                    size="small"
-                    onClick={onClose}
-                    onTouchStart={onClose}
+              <div
+                className={classes.header}
+                style={{ backgroundColor: "#DAD9DD" }}
+              >
+                <div>
+                  <Typography
+                    variant="body2"
+                    color="#004AAD"
+                    fontWeight={600}
+                    fontSize={14}
                   >
-                    <CloseIcon
-                      fontSize="small"
-                      className={classes.mediaButton}
-                    />
-                  </IconButton>
-                </CardMedia>
-              ) : (
-                <div className={classes.header}>
-                  <Typography variant="body2" color="textSecondary">
                     {device.name}
                   </Typography>
+                  <Typography
+                    variant="body2"
+                    fontWeight={800}
+                    color={"#004AAD"}
+                    className="opacity-60"
+                    fontSize={14}
+                  >
+                    {secondaryText(device)}
+                  </Typography>
+                </div>
+                <div>
+                  {vistaMapa ? (
+                    <IconButton
+                      size="small"
+                      onTouchStart={() => {
+                        setVistaMapa(false);
+                      }}
+                      onClick={() => {
+                        setVistaMapa(false);
+                      }}
+                    >
+                      <FeedIcon fontSize="small" />
+                    </IconButton>
+                  ) : (
+                    <IconButton
+                      size="small"
+                      onTouchStart={() => {
+                        setVistaMapa(true);
+                      }}
+                      onClick={() => {
+                        setVistaMapa(true);
+                      }}
+                    >
+                      <CameraAltIcon fontSize="small" />
+                    </IconButton>
+                  )}
+
                   <IconButton
                     size="small"
                     onClick={onClose}
@@ -221,96 +369,143 @@ const StatusDesktopCard = ({
                     <CloseIcon fontSize="small" />
                   </IconButton>
                 </div>
-              )}
+              </div>
               {position && (
                 <CardContent className={classes.content}>
-                  <Table size="small" classes={{ root: classes.table }}>
-                    <TableBody>
-                      {positionItems
-                        .split(",")
-                        .filter(
-                          (key) =>
-                            position.hasOwnProperty(key) ||
-                            position.attributes.hasOwnProperty(key)
-                        )
-                        .map((key) => (
-                          <StatusRow
-                            key={key}
-                            name={positionAttributes[key]?.name || key}
-                            content={
-                              <PositionValue
-                                position={position}
-                                property={
-                                  position.hasOwnProperty(key) ? key : null
-                                }
-                                attribute={
-                                  position.hasOwnProperty(key) ? null : key
+                  {vistaMapa ? (
+                    <div>
+                      <iframe
+                        src={convertToEmbedUrl(
+                          `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${position.latitude}%2C${position.longitude}&heading=${position.course}`
+                        )}
+                        width="100%"
+                        height="100%"
+                        style={{ border: 0 }}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        title="Google Maps Street View"
+                      ></iframe>
+                    </div>
+                  ) : (
+                    <Table size="small" classes={{ root: classes.table }}>
+                      <TableBody>
+                        {positionItems
+                          .split(",")
+                          .filter(
+                            (key) =>
+                              position.hasOwnProperty(key) ||
+                              position.attributes.hasOwnProperty(key)
+                          )
+                          .map((key) => {
+                            return key === "address" ? ( // Verifica si la clave es "address"
+                              <TableRow>
+                                <TableCell className={classes.cell}>
+                                  <Typography variant="body2">
+                                    {positionAttributes[key]?.name}
+                                  </Typography>
+                                </TableCell>
+                                <TableCell className={classes.cell}>
+                                  <Typography
+                                    variant="body2"
+                                    color="textSecondary"
+                                  >
+                                    {direccion}
+                                  </Typography>
+                                </TableCell>
+                              </TableRow>
+                            ) : (
+                              <StatusRow
+                                key={key}
+                                name={positionAttributes[key]?.name || key}
+                                content={
+                                  <PositionValue
+                                    position={position}
+                                    property={
+                                      position.hasOwnProperty(key) ? key : null
+                                    }
+                                    attribute={
+                                      !position.hasOwnProperty(key) ? key : null
+                                    }
+                                  />
                                 }
                               />
-                            }
-                          />
-                        ))}
-                    </TableBody>
-                    <TableFooter>
-                      <TableRow>
-                        <TableCell colSpan={2} className={classes.cell}>
-                          <Typography variant="body2">
-                            <Link
-                              component={RouterLink}
-                              to={`/position/${position.id}`}
-                            >
-                              {t("sharedShowDetails")}
-                            </Link>
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    </TableFooter>
-                  </Table>
+                            );
+                          })}
+                        {}
+                        {data == null || isDesktop ? null : (
+                          <TableRow>
+                            <TableCell className={classes.cell}>
+                              <Typography variant="body2">
+                                Duración Parada
+                              </Typography>
+                            </TableCell>
+                            <TableCell className={classes.cell}>
+                              <Typography variant="body2" color="textSecondary">
+                                {data.parada}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                        {data == null || isDesktop ? null : (
+                          <TableRow>
+                            <TableCell className={classes.cell}>
+                              <Typography variant="body2">
+                                Duración encendido
+                              </Typography>
+                            </TableCell>
+                            <TableCell className={classes.cell}>
+                              <Typography variant="body2" color="textSecondary">
+                                {data.encendido}
+                              </Typography>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  )}
                 </CardContent>
               )}
               <CardActions classes={{ root: classes.actions }} disableSpacing>
-                <Tooltip title={t("sharedExtra")}>
+                <Tooltip title="Ver recorrido" arrow>
                   <IconButton
-                    color="secondary"
-                    onClick={(e) => setAnchorEl(e.currentTarget)}
-                    disabled={!position}
+                    sx={{ color: "#004AAD" }}
+                    onClick={() => {
+                      navigate("replay");
+                    }}
                   >
-                    <PendingIcon />
+                    <RouteIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={t("reportReplay")}>
+                <Tooltip title="Comandos" arrow>
                   <IconButton
-                    onClick={() => navigate("/replay")}
-                    disabled={disableActions || !position}
+                    sx={{ color: "#D32F2F" }}
+                    onClick={() => {
+                      setValorOpcion(1);
+                      setOpcionActiva(true);
+                    }}
                   >
-                    <ReplayIcon />
+                    <LockIcon />
                   </IconButton>
                 </Tooltip>
                 <Tooltip title={t("commandTitle")}>
                   <IconButton
-                    onClick={() =>
-                      navigate(`/settings/device/${deviceId}/command`)
-                    }
-                    disabled={disableActions}
+                    sx={{ color: "#4EA72E" }}
+                    onClick={() => {
+                      navigate("geofences");
+                    }}
                   >
-                    <PublishIcon />
+                    <AnchorIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={t("sharedEdit")}>
+                <Tooltip title="Encender motor" arrow>
                   <IconButton
-                    onClick={() => navigate(`/settings/device/${deviceId}`)}
-                    disabled={disableActions || deviceReadonly}
+                    sx={{ color: "#67C23A" }}
+                    onClick={() => {
+                      setValorOpcion(3);
+                      setOpcionActiva(true);
+                    }}
                   >
-                    <EditIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title={t("sharedRemove")}>
-                  <IconButton
-                    color="error"
-                    onClick={() => setRemoving(true)}
-                    disabled={disableActions || deviceReadonly}
-                  >
-                    <DeleteIcon />
+                    <KeyIcon />
                   </IconButton>
                 </Tooltip>
               </CardActions>

@@ -17,6 +17,7 @@ import CollectionActions from "./components/CollectionActions";
 import TableShimmer from "../common/components/TableShimmer";
 import SearchHeader, { filterByKeyword } from "./components/SearchHeader";
 import useSettingsStyles from "./common/useSettingsStyles";
+import CollectionDesktopFab from "./components/CollectionDesktopFab";
 
 const NotificationsDesktopPage = () => {
   const classes = useSettingsStyles();
@@ -94,7 +95,7 @@ const NotificationsDesktopPage = () => {
           )}
         </TableBody>
       </Table>
-      <CollectionFab editPath="/settings/notification" />
+      <CollectionDesktopFab editPath="/settings/notification" />
     </div>
   );
 };

@@ -69,13 +69,15 @@ const UserDesktopPage = () => {
   const commonUserAttributes = useCommonUserAttributes(t);
   const userAttributes = useUserAttributes(t);
 
-  const { id } = useParams();
+  const id = currentUser.id.toString();
   const [item, setItem] = useState(
     id === currentUser.id.toString() ? currentUser : null
   );
-
   const [deleteEmail, setDeleteEmail] = useState();
   const [deleteFailed, setDeleteFailed] = useState(false);
+  useEffect(() => {
+    console.log(item);
+  }, [item]);
 
   const handleDelete = useCatch(async () => {
     if (deleteEmail === currentUser.email) {
