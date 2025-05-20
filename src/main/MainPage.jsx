@@ -20,6 +20,7 @@ import MainToolbar from "./MainToolbar";
 import DeviceList from "./DeviceList";
 import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
+import StatusMovilCard from "../common/components/StatusMovilCard";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -294,21 +295,20 @@ const MainPage = () => {
               <DeviceList devices={filteredDevices} />
             </Paper>
           </div>
-          {desktop && (
-            <div className={classes.footer}>
-              <BottomMenu />
-            </div>
-          )}
+          <div>
+            {selectedDeviceId && (
+              <StatusMovilCard
+                deviceId={selectedDeviceId}
+                position={selectedPosition}
+                onClose={() => dispatch(devicesActions.selectId(null))}
+                desktopPadding={theme.dimensions.drawerWidthDesktop}
+                setOpcionActiva={setOpcionActiva}
+                setValorOpcion={setValorOpcion}
+              />
+            )}
+          </div>
         </div>
         <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
-        {selectedDeviceId && (
-          <StatusCard
-            deviceId={selectedDeviceId}
-            position={selectedPosition}
-            onClose={() => dispatch(devicesActions.selectId(null))}
-            desktopPadding={theme.dimensions.drawerWidthDesktop}
-          />
-        )}
       </div>
     );
   }

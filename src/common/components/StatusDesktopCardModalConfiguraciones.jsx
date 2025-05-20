@@ -6,7 +6,6 @@ import { Card, CardContent, Typography, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "./LocalizationProvider";
-import Ancla from "./ConfiguracionesFlotantes/Ancla";
 import Llave from "./ConfiguracionesFlotantes/Llave";
 import Candado from "./ConfiguracionesFlotantes/Candado";
 
@@ -98,13 +97,6 @@ const StatusDesktopCardModalConfiguraciones = ({
       return (
         <div>
           <Candado onClose={onClose} />
-        </div>
-      );
-    }
-    if (valorOpcion == 2) {
-      return (
-        <div>
-          <Ancla />
         </div>
       );
     }
