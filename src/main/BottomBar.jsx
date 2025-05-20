@@ -1,13 +1,13 @@
 import { MinimizeTwoTone } from "@mui/icons-material";
-import { Card, CardContent, Typography } from "@mui/material";
+import { Card, CardContent, IconButton, Typography } from "@mui/material";
 import React from "react";
 import { convertToEmbedUrl } from "../common/util/streetview";
 import Informacion from "./NuevosRecursos/Informacion";
 import InformacionEncendido from "./NuevosRecursos/InformacionEncendido";
 import Ubicacion from "./NuevosRecursos/Ubicacion";
+import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 
 const BottomBar = ({ position, deviceId }) => {
-  console.log(position);
   return (
     <div
       className="flex p-2 gap-2 overflow-auto"

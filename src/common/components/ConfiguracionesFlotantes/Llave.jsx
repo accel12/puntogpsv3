@@ -22,9 +22,13 @@ const Llave = ({ onClose }) => {
     console.log(lista);
     const engineResume = lista.find((item) => item.type === "engineResume");
     let command;
+    if (engineResume == undefined) {
+      alert("El comando no se encuentra configurado en este dispositivo");
+      onClose();
+      return;
+    }
     if (engineResume.id) {
       const response = await fetch(`/api/commands/${engineResume.id}`);
-      console.log(response);
       if (response.ok) {
         console.log(response);
         command = await response.json();

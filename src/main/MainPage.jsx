@@ -1,4 +1,4 @@
-import { Card, Paper, useMediaQuery } from "@mui/material";
+import { Card, IconButton, Paper, useMediaQuery } from "@mui/material";
 import React, { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useTheme } from "@mui/material/styles";
@@ -18,6 +18,8 @@ import StatusDesktopCardModalApagarMotor from "../common/components/StatusDeskto
 import { makeStyles } from "@mui/styles";
 import MainToolbar from "./MainToolbar";
 import DeviceList from "./DeviceList";
+import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
+import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -90,6 +92,7 @@ const MainPage = () => {
   const [eventsOpen, setEventsOpen] = useState(false);
   const [devicesOpen, setDevicesOpen] = useState(desktop);
   const [ocultar, setOcultar] = useState(false);
+  const [ocultarModalInfo, setOcultarModalInfo] = useState(false);
   const onEventsClick = useCallback(() => setEventsOpen(true), [setEventsOpen]);
   const anchoSidebar = ocultar ? "56px" : "386px";
   const classes = useStyles();
@@ -147,6 +150,7 @@ const MainPage = () => {
               style={{
                 height: selectedDeviceId ? "75%" : "100%",
                 minHeight: selectedDeviceId ? "calc(75% - 200px)" : "100%",
+                position: "relative",
               }}
             >
               <MainMap
@@ -154,6 +158,47 @@ const MainPage = () => {
                 selectedPosition={selectedPosition}
                 onEventsClick={onEventsClick}
               />
+              {selectedDeviceId && (
+                <div>
+                  {ocultarModalInfo ? (
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        bottom: 2,
+                        left: 2,
+                        backgroundColor: "#F8F7FC",
+                        "&:hover": {
+                          backgroundColor: "#F8F7FC",
+                        },
+                      }}
+                      size="small"
+                      onClick={() => {
+                        setOcultarModalInfo(false);
+                      }}
+                    >
+                      <KeyboardDoubleArrowUpIcon />
+                    </IconButton>
+                  ) : (
+                    <IconButton
+                      sx={{
+                        position: "absolute",
+                        bottom: 2,
+                        left: 2,
+                        backgroundColor: "#F8F7FC",
+                        "&:hover": {
+                          backgroundColor: "#F8F7FC",
+                        },
+                      }}
+                      size="small"
+                      onClick={() => {
+                        setOcultarModalInfo(true);
+                      }}
+                    >
+                      <KeyboardDoubleArrowDownIcon />
+                    </IconButton>
+                  )}
+                </div>
+              )}
             </Card>
             {selectedDeviceId && (
               <BottomBar
@@ -163,7 +208,7 @@ const MainPage = () => {
             )}
           </div>
         </div>
-        {selectedDeviceId && (
+        {selectedDeviceId && !ocultarModalInfo && (
           <StatusDesktopCard
             deviceId={selectedDeviceId}
             position={selectedPosition}
@@ -173,6 +218,7 @@ const MainPage = () => {
             setValorOpcion={setValorOpcion}
           />
         )}
+        {/* Modal de configuraciones */}
         {selectedDeviceId && ModalActivo && (
           <StatusDesktopCardModal
             deviceId={selectedDeviceId}

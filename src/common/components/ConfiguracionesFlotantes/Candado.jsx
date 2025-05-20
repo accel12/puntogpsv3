@@ -17,7 +17,7 @@ import { useRestriction } from "../../util/permissions";
 import { useCatch } from "../../../reactHelper";
 import { useTranslation } from "../LocalizationProvider";
 
-const Candado = () => {
+const Candado = ({ onClose }) => {
   const navigate = useNavigate();
   const classes = useSettingsStyles();
   const t = useTranslation();
@@ -32,16 +32,22 @@ const Candado = () => {
 
   const handleSend = useCatch(async () => {
     let command;
-    console.log(savedId);
+    console.log("savedId", savedId);
     if (savedId) {
+      console.log("savea");
       const response = await fetch(`/api/commands/${savedId}`);
+      console.log(response);
       if (response.ok) {
         command = await response.json();
+        alert("Comando creado");
+        onClose();
       } else {
         throw Error(await response.text());
       }
     } else {
       command = item;
+      alert("No se puede crear comando para este dispositivo");
+      onClose();
     }
 
     command.deviceId = parseInt(id, 10);
@@ -72,7 +78,10 @@ const Candado = () => {
               value={savedId}
               emptyValue={limitCommands ? null : 0}
               emptyTitle={t("sharedNew")}
-              onChange={(e) => setSavedId(e.target.value)}
+              onChange={(e) => {
+                console.log(e);
+                setSavedId(e.target.value);
+              }}
               endpoint={`/api/commands/send?deviceId=${id}`}
               titleGetter={(it) => it.description}
               label={t("sharedSavedCommand")}

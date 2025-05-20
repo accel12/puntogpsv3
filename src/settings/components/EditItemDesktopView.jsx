@@ -61,6 +61,7 @@ const EditItemDesktopView = ({
     if (response.ok) {
       if (onItemSaved) {
         onItemSaved(await response.json());
+        alert("Se guardaron los cambios");
       }
     } else {
       throw Error(await response.text());

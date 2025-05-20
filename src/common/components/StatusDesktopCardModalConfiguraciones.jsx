@@ -2,42 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, Link as RouterLink } from "react-router-dom";
 import Draggable from "react-draggable";
-import {
-  Card,
-  CardContent,
-  Typography,
-  CardActions,
-  IconButton,
-  Table,
-  TableBody,
-  TableRow,
-  TableCell,
-  Menu,
-  MenuItem,
-  CardMedia,
-  TableFooter,
-  Link,
-  Tooltip,
-} from "@mui/material";
+import { Card, CardContent, Typography, IconButton } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import CloseIcon from "@mui/icons-material/Close";
-import ReplayIcon from "@mui/icons-material/Replay";
-import PublishIcon from "@mui/icons-material/Publish";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import PendingIcon from "@mui/icons-material/Pending";
-import Marker from "../../resources/images/marker.png";
-import WhatsappIcon from "../../resources/images/wzzicon.png";
-import ShareIcon from "../../resources/images/shareIcon.png";
-import InsertLinkIcon from "@mui/icons-material/InsertLink";
 import { useTranslation } from "./LocalizationProvider";
-import RemoveDialog from "./RemoveDialog";
-import PositionValue from "./PositionValue";
-import { useDeviceReadonly } from "../util/permissions";
-import usePositionAttributes from "../attributes/usePositionAttributes";
-import { devicesActions } from "../../store";
-import { useCatch, useCatchCallback } from "../../reactHelper";
-import { useAttributePreference } from "../util/preferences";
 import Ancla from "./ConfiguracionesFlotantes/Ancla";
 import Llave from "./ConfiguracionesFlotantes/Llave";
 import Candado from "./ConfiguracionesFlotantes/Candado";
@@ -107,23 +75,6 @@ const useStyles = makeStyles((theme) => ({
   }),
 }));
 
-const StatusRow = ({ name, content }) => {
-  const classes = useStyles();
-
-  return (
-    <TableRow>
-      <TableCell className={classes.cell}>
-        <Typography variant="body2">{name}</Typography>
-      </TableCell>
-      <TableCell className={classes.cell}>
-        <Typography variant="body2" color="textSecondary">
-          {content}
-        </Typography>
-      </TableCell>
-    </TableRow>
-  );
-};
-
 const StatusDesktopCardModalConfiguraciones = ({
   deviceId,
   position,
@@ -137,40 +88,8 @@ const StatusDesktopCardModalConfiguraciones = ({
   const dispatch = useDispatch();
   const t = useTranslation();
 
-  const deviceReadonly = useDeviceReadonly();
-
-  const shareDisabled = useSelector(
-    (state) => state.session.server.attributes.disableShare
-  );
-  const user = useSelector((state) => state.session.user);
   const device = useSelector((state) => state.devices.items[deviceId]);
 
-  const deviceImage = device?.attributes?.deviceImage;
-
-  const positionAttributes = usePositionAttributes(t);
-  const positionItems = useAttributePreference(
-    "positionItems",
-    "fixTime,address,speed,totalDistance"
-  );
-
-  const navigationAppLink = useAttributePreference("navigationAppLink");
-  const navigationAppTitle = useAttributePreference("navigationAppTitle");
-
-  const [anchorEl, setAnchorEl] = useState(null);
-
-  const [removing, setRemoving] = useState(false);
-
-  const handleRemove = useCatch(async (removed) => {
-    if (removed) {
-      const response = await fetch("/api/devices");
-      if (response.ok) {
-        dispatch(devicesActions.refresh(await response.json()));
-      } else {
-        throw Error(await response.text());
-      }
-    }
-    setRemoving(false);
-  });
   const Renderizar = () => {
     if (valorOpcion == 0) {
       return <div>0</div>;
@@ -178,7 +97,7 @@ const StatusDesktopCardModalConfiguraciones = ({
     if (valorOpcion == 1) {
       return (
         <div>
-          <Candado />
+          <Candado onClose={onClose} />
         </div>
       );
     }
@@ -197,34 +116,7 @@ const StatusDesktopCardModalConfiguraciones = ({
       );
     }
   };
-  const handleGeofence = useCatchCallback(async () => {
-    const newItem = {
-      name: t("sharedGeofence"),
-      area: `CIRCLE (${position.latitude} ${position.longitude}, 50)`,
-    };
-    const response = await fetch("/api/geofences", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newItem),
-    });
-    if (response.ok) {
-      const item = await response.json();
-      const permissionResponse = await fetch("/api/permissions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceId: position.deviceId,
-          geofenceId: item.id,
-        }),
-      });
-      if (!permissionResponse.ok) {
-        throw Error(await permissionResponse.text());
-      }
-      navigate(`/settings/geofence/${item.id}`);
-    } else {
-      throw Error(await response.text());
-    }
-  }, [navigate, position]);
+
   return (
     <>
       <div className={classes.root}>

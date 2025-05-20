@@ -15,6 +15,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  useMediaQuery,
 } from "@mui/material";
 import makeStyles from "@mui/styles/makeStyles";
 import CloseIcon from "@mui/icons-material/Close";
@@ -39,7 +40,11 @@ import { devicesActions } from "../../store";
 import { useCatch, useCatchCallback } from "../../reactHelper";
 import { useAttributePreference } from "../util/preferences";
 import dayjs from "dayjs";
-import { formatStatus, getStatusColor } from "../util/formatter";
+import {
+  formatNumericHours,
+  formatStatus,
+  getStatusColor,
+} from "../util/formatter";
 import { convertToEmbedUrl } from "../util/streetview";
 
 const useStyles = makeStyles((theme) => ({
@@ -156,6 +161,23 @@ const StatusRow = ({ name, content }) => {
   );
 };
 
+const obtenerInfoEncendido = async (id) => {
+  const startDate = dayjs().startOf("day").toISOString();
+  const endDate = dayjs().endOf("day").toISOString();
+
+  const armarQuery = `deviceId=${id}&from=${startDate}&to=${endDate}`;
+  const response = await fetch(`/api/reports/trips?${armarQuery}`, {
+    headers: { Accept: "application/json" },
+  });
+  console.log(armarQuery);
+  if (response.ok) {
+    return await response.json();
+  } else {
+    throw Error(await response.text());
+    return [];
+  }
+};
+
 const obtenerInfoParada = async (id) => {
   const startDate = dayjs().startOf("day").toISOString();
   const endDate = dayjs().endOf("day").toISOString();
@@ -179,6 +201,7 @@ const StatusDesktopCard = ({
   onClose,
   setOpcionActiva,
   setValorOpcion,
+  isDesktop,
   desktopPadding = 0,
 }) => {
   const classes = useStyles({ desktopPadding });
@@ -189,6 +212,7 @@ const StatusDesktopCard = ({
   const [vistaMapa, setVistaMapa] = useState(false);
   const [data, setData] = useState(null);
   const t = useTranslation();
+
   const obtenerData = async () => {
     const getDataParada = await obtenerInfoParada(deviceId);
     const getDataEncendido = await obtenerInfoEncendido(deviceId);
@@ -221,15 +245,12 @@ const StatusDesktopCard = ({
     }
   }, [position]);
 
-  const deviceReadonly = useDeviceReadonly();
-
   const shareDisabled = useSelector(
     (state) => state.session.server.attributes.disableShare
   );
   const user = useSelector((state) => state.session.user);
   const device = useSelector((state) => state.devices.items[deviceId]);
 
-  const deviceImage = device?.attributes?.deviceImage;
   const secondaryText = (item) => {
     let status;
     if (item.status === "online" || !item.lastUpdate) {
@@ -466,7 +487,7 @@ const StatusDesktopCard = ({
                 </CardContent>
               )}
               <CardActions classes={{ root: classes.actions }} disableSpacing>
-                <Tooltip title="Ver recorrido" arrow>
+                <Tooltip title="Rutas" arrow>
                   <IconButton
                     sx={{ color: "#004AAD" }}
                     onClick={() => {
@@ -476,7 +497,7 @@ const StatusDesktopCard = ({
                     <RouteIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Comandos" arrow>
+                <Tooltip title="Activar comando" arrow>
                   <IconButton
                     sx={{ color: "#D32F2F" }}
                     onClick={() => {
@@ -487,7 +508,7 @@ const StatusDesktopCard = ({
                     <LockIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title={t("commandTitle")}>
+                <Tooltip title="Geozonas" arrow>
                   <IconButton
                     sx={{ color: "#4EA72E" }}
                     onClick={() => {
@@ -497,7 +518,7 @@ const StatusDesktopCard = ({
                     <AnchorIcon />
                   </IconButton>
                 </Tooltip>
-                <Tooltip title="Encender motor" arrow>
+                <Tooltip title="Encender Motor" arrow>
                   <IconButton
                     sx={{ color: "#67C23A" }}
                     onClick={() => {
