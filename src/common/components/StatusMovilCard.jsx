@@ -21,13 +21,13 @@ import makeStyles from "@mui/styles/makeStyles";
 import CloseIcon from "@mui/icons-material/Close";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import FeedIcon from "@mui/icons-material/Feed";
-
+import ShareIcon from "@mui/icons-material/Share";
 import { useTranslation } from "./LocalizationProvider";
 import RemoveDialog from "./RemoveDialog";
 import PositionValue from "./PositionValue";
 import usePositionAttributes from "../attributes/usePositionAttributes";
 import { devicesActions } from "../../store";
-import { useCatch, useCatchCallback } from "../../reactHelper";
+import { useCatch, useCatchCallback, useEffectAsync } from "../../reactHelper";
 import { useAttributePreference } from "../util/preferences";
 import dayjs from "dayjs";
 import {
@@ -187,6 +187,9 @@ const StatusMovilCard = ({
   setOpcionActiva,
   setValorOpcion,
   desktopPadding = 0,
+  setModalActivo,
+  filteredDevices,
+  setOpcionApagarMotorActiva,
 }) => {
   const classes = useStyles({ desktopPadding });
   const classes2 = useStyles2();
@@ -194,6 +197,7 @@ const StatusMovilCard = ({
   const dispatch = useDispatch();
   const [direccion, setDireccion] = useState("");
   const [vistaMapa, setVistaMapa] = useState(false);
+  const [botonApagar, setBotonApagar] = useState(false);
   const [data, setData] = useState(null);
   const t = useTranslation();
 
@@ -269,6 +273,8 @@ const StatusMovilCard = ({
 
   const [removing, setRemoving] = useState(false);
 
+  const item = filteredDevices.find((item) => item.id === deviceId);
+
   const handleRemove = useCatch(async (removed) => {
     if (removed) {
       const response = await fetch("/api/devices");
@@ -280,6 +286,19 @@ const StatusMovilCard = ({
     }
     setRemoving(false);
   });
+
+  useEffectAsync(async () => {
+    const endpoints = `/api/commands/send?deviceId=${item.id}`;
+    if (endpoints) {
+      const response = await fetch(endpoints);
+      if (response.ok) {
+        const data = await response.json(); // Esperar la resolución de response.json
+        setBotonApagar(data.some((item) => item.type === "engineStop"));
+      } else {
+        throw Error(await response.text());
+      }
+    }
+  }, []);
 
   const handleGeofence = useCatchCallback(async () => {
     const newItem = {
@@ -311,10 +330,21 @@ const StatusMovilCard = ({
   }, [navigate, position]);
 
   return (
-    <>
-      <div className={classes.root}>
+    <div
+      className={classes.root}
+      style={{ height: "40vh", maxHeight: "400px", backgroundColor: "#FFFFFF" }}
+    >
+      <div style={{ height: "100%" }}>
         {device && (
-          <Card elevation={3} className={classes.card}>
+          <Card
+            elevation={3}
+            className={classes.card}
+            style={{
+              height: "100%",
+              borderTopLeftRadius: "17px",
+              borderTopRightRadius: "17px",
+            }}
+          >
             <div
               className={classes.header}
               style={{ backgroundColor: "#DAD9DD" }}
@@ -339,6 +369,72 @@ const StatusMovilCard = ({
                 </Typography>
               </div>
               <div>
+                {botonApagar ? (
+                  <Tooltip title="Apagar motor">
+                    <IconButton
+                      size="small"
+                      onClick={() => {
+                        setOpcionApagarMotorActiva(true);
+                      }}
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        xmlnsXlink="http://www.w3.org/1999/xlink"
+                        version="1.1"
+                        id="Layer_1"
+                        viewBox="0 0 50 50"
+                        width="23px"
+                        height="23px"
+                        xmlSpace="preserve"
+                        enableBackground="new 0 0 50 50"
+                        fill="red"
+                      >
+                        <rect fill="none" width="50" height="50" />
+                        <polyline
+                          fill="none"
+                          points="30,14 30,10 35,10 35,6 21,6 21,10 26,10 26,14"
+                          stroke="red"
+                          strokeLinejoin="round"
+                          strokeMiterlimit="10"
+                          strokeWidth="2"
+                        />
+                        <polyline
+                          fill="none"
+                          points="9,27 5,27 5,21 1,21 1,37 5,37 5,31 9,31"
+                          stroke="red"
+                          strokeLinejoin="round"
+                          strokeMiterlimit="10"
+                          strokeWidth="2"
+                        />
+                        <path
+                          d="M45,20v5h-3v-8.157C42,15.826,41.189,15,40.191,15H19.99c-0.479,0-0.941,0.195-1.28,0.542L14,21h-3c-1,0-2,1-2,2v12c0,1.018,1.002,2,2,2h3l4.712,5.461C19.051,42.806,19.511,43,19.99,43h12.855c0.479,0,0.939-0.194,1.278-0.539l7.346-7.482c0.341-0.346,0.53-0.814,0.53-1.303V31h3v5h4V20H45z"
+                          fill="none"
+                          stroke="red"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeMiterlimit="10"
+                          strokeWidth="2.0077"
+                        />
+                        <polygon
+                          points="32,28 24,39 27,30 22,30 27,20 32,20 27,28"
+                          stroke="red"
+                          fill="red"
+                        />
+                      </svg>
+                      {/* <ErrorIcon fontSize="small" className={classes.error} /> */}
+                    </IconButton>
+                  </Tooltip>
+                ) : null}
+                <Tooltip title="Compartir">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setModalActivo(true);
+                    }}
+                  >
+                    <ShareIcon size="small" sx={{ color: "#1A237E" }} />
+                  </IconButton>
+                </Tooltip>
                 {vistaMapa ? (
                   <IconButton
                     size="small"
@@ -375,16 +471,23 @@ const StatusMovilCard = ({
               </div>
             </div>
             {position && (
-              <CardContent className={classes.content}>
+              <CardContent
+                className={classes.content}
+                style={{ height: "100%", overflow: "auto" }}
+              >
                 {vistaMapa ? (
-                  <div>
+                  <div
+                    style={{
+                      height: "100%",
+                      width: "100%",
+                    }}
+                  >
                     <iframe
                       src={convertToEmbedUrl(
                         `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${position.latitude}%2C${position.longitude}&heading=${position.course}`
                       )}
                       width="100%"
-                      height="100%"
-                      style={{ border: 0 }}
+                      height="85%"
                       loading="lazy"
                       referrerPolicy="no-referrer-when-downgrade"
                       title="Google Maps Street View"
@@ -499,7 +602,7 @@ const StatusMovilCard = ({
         itemId={deviceId}
         onResult={(removed) => handleRemove(removed)}
       />
-    </>
+    </div>
   );
 };
 

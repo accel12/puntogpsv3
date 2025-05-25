@@ -92,21 +92,14 @@ const useStyles = makeStyles((theme) => ({
     pointerEvents: "none",
     position: "fixed",
     zIndex: 5,
-    left: "70%",
-    bottom: "500px",
-    // [theme.breakpoints.up("md")]: {
-    //   left: `calc(50% + ${desktopPadding} / 2)`,
-    //   bottom: 500,
-    // },
-    // [theme.breakpoints.down("md")]: {
-    //   left: "50%",
-    //   bottom: 500,
-    // },
+    left: "50%",
+    bottom: "50vh",
+    width: "90hv",
     transform: "translateX(-50%)",
   }),
 }));
 
-const StatusDesktopCardModalApagarMotor = ({
+const StatusMovilCardModalApagarMotor = ({
   deviceId,
   position,
   valorOpcion,
@@ -147,21 +140,18 @@ const StatusDesktopCardModalApagarMotor = ({
     const responseEngine = await fetch(
       `/api/commands/send?deviceId=${selectedDeviceId}`
     );
-    console.log(responseEngine);
     const lista = await responseEngine.json();
-    console.log(lista);
     const engineResume = lista.find((item) => item.type === "engineStop");
+    let command;
     if (engineResume == undefined) {
       alert("Esta acción no está permitida para este dispositivo");
       onClose();
       return;
     }
-    let command;
     if (engineResume.id) {
       const response = await fetch(`/api/commands/${engineResume.id}`);
       console.log(response);
       if (response.ok) {
-        console.log(response);
         command = await response.json();
       } else {
         throw Error(await response.text());
@@ -195,7 +185,7 @@ const StatusDesktopCardModalApagarMotor = ({
               <Card
                 elevation={3}
                 className={classes.card}
-                style={{ width: "400px" }}
+                style={{ width: "90vw" }}
               >
                 <div className={classes.header}>
                   <Typography variant="body2" color="textSecondary">
@@ -243,4 +233,4 @@ const StatusDesktopCardModalApagarMotor = ({
   );
 };
 
-export default StatusDesktopCardModalApagarMotor;
+export default StatusMovilCardModalApagarMotor;

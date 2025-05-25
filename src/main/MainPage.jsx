@@ -21,6 +21,8 @@ import DeviceList from "./DeviceList";
 import KeyboardDoubleArrowUpIcon from "@mui/icons-material/KeyboardDoubleArrowUp";
 import KeyboardDoubleArrowDownIcon from "@mui/icons-material/KeyboardDoubleArrowDown";
 import StatusMovilCard from "../common/components/StatusMovilCard";
+import StatusMovilCardModalApagarMotor from "../common/components/StatusMovilCardModalApagarMotor";
+import StatusMovilCardModal from "../common/components/StatusMovilCardModal";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -304,10 +306,32 @@ const MainPage = () => {
                 desktopPadding={theme.dimensions.drawerWidthDesktop}
                 setOpcionActiva={setOpcionActiva}
                 setValorOpcion={setValorOpcion}
+                setModalActivo={setModalActivo}
+                filteredDevices={filteredDevices}
+                setOpcionApagarMotorActiva={setOpcionApagarMotorActiva}
               />
             )}
           </div>
         </div>
+        {selectedDeviceId && opcionApagarMotorActiva && (
+          <StatusMovilCardModalApagarMotor
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            valorOpcion={valorOpcion}
+            onClose={() => setOpcionApagarMotorActiva(false)}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+          />
+        )}
+        {selectedDeviceId && ModalActivo && (
+          <StatusMovilCardModal
+            deviceId={selectedDeviceId}
+            position={selectedPosition}
+            ModalActivo={ModalActivo}
+            setModalActivo={setModalActivo}
+            onClose={() => setModalActivo(false)}
+            desktopPadding={theme.dimensions.drawerWidthDesktop}
+          />
+        )}
         <EventsDrawer open={eventsOpen} onClose={() => setEventsOpen(false)} />
       </div>
     );

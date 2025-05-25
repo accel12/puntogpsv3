@@ -91,7 +91,7 @@ const useStyles = makeStyles((theme) => ({
     pointerEvents: "none",
     position: "fixed",
     zIndex: 5,
-    left: "70%",
+    left: "50%",
     bottom: "60%",
     // [theme.breakpoints.up("md")]: {
     //   left: `calc(50% + ${desktopPadding} / 2)`,
@@ -124,7 +124,7 @@ const StatusRow = ({ name, content }) => {
   );
 };
 
-const StatusDesktopCardModal = ({
+const StatusMovilCardModal = ({
   deviceId,
   position,
   ModalActivo,
@@ -354,4 +354,4 @@ const StatusDesktopCardModal = ({
   );
 };
 
-export default StatusDesktopCardModal;
+export default StatusMovilCardModal;
